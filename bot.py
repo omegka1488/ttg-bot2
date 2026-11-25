@@ -56,8 +56,8 @@ DEFAULT_OPENROUTER_KEY = "sk-or-v1-91174f514251b182b0a7d4d8c8ba389515facb40cb11b
 
 # Секреты: env имеет приоритет над значениями по умолчанию
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or DEFAULT_TELEGRAM_TOKEN
-OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY") or DEFAULT_OPENROUTER_KEY
-OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL") or "https://openrouter.ai/api/v1"
+OPENROUTER_KEY = os.getenv("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") or DEFAULT_OPENROUTER_KEY
+OPENROUTER_BASE_URL = os.getenv("https://openrouter.ai/api/v1") or "https://openrouter.ai/api/v1"
 
 CONFIG_PATH = Path(os.getenv("CONFIG_PATH", BASE_DIR / "config.yaml"))
 DB_PATH = Path(os.getenv("DB_PATH", BASE_DIR / "bot.db"))
