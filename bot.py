@@ -7,15 +7,14 @@ import time
 import threading
 from datetime import datetime
 from pathlib import Path
-from zoneinfo import ZoneInfo
 
 from aiogram import Bot, Dispatcher, F, Router
-from aiogram.filters import Command, CommandObject
-from aiogram.types import BotCommand, Message
+from aiogram.filters import Command
+from aiogram.types import BotCommand, Message, ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.chat_action import ChatActionSender
 from dotenv import load_dotenv
 from loguru import logger
-from openai import AsyncOpenAI, APIStatusError, APITimeoutError, APIConnectionError, RateLimitError
+from openai import AsyncOpenAI
 
 BASE_DIR = Path(__file__).resolve().parent
 load_dotenv(BASE_DIR / ".env")
@@ -108,7 +107,13 @@ def init_db():
     global _db
     _db = sqlite3.connect(DB_PATH, check_same_thread=False)
     with _db_lock:
-        _db.execute("CREATE TABLE IF NOT EXISTS history (user_id INTEGER, role TEXT, content TEXT, ts REAL)")
+        _db.execute("""CREATE TABLE IF NOT EXISTS history (
+            user_id INTEGER, 
+            role TEXT, 
+            content TEXT, 
+            ts REAL
+        )""")
+        _db.execute("CREATE INDEX IF NOT EXISTS idx_user ON history (user_id, ts)")
         _db.commit()
 
 def db_run(sql, params=(), fetch=False):
@@ -122,7 +127,8 @@ async def db(sql, params=(), fetch=False):
     return await asyncio.to_thread(db_run, sql, params, fetch)
 
 async def history_get(user_id):
-    rows = await db("SELECT role, content FROM history WHERE user_id=? ORDER BY ts DESC LIMIT 20", (user_id,), True)
+    # Берем последние 50 сообщений для глубокого контекста
+    rows = await db("SELECT role, content FROM history WHERE user_id=? ORDER BY ts DESC LIMIT 50", (user_id,), True)
     return [{"role": r, "content": c} for r, c in reversed(rows)]
 
 async def history_add(user_id, user_text, bot_text):
@@ -139,9 +145,9 @@ client = AsyncOpenAI(base_url=OPENROUTER_BASE_URL, api_key=OPENROUTER_KEY, timeo
 async def ask_llm(messages):
     try:
         resp = await client.chat.completions.create(
-            model=os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3-ultra-550b-a55b:free"),
+            model="baidu/ernie-5.5-flash-preview:free",
             messages=messages,
-            temperature=0.9,
+            temperature=0.95,
             max_tokens=8000
         )
         text = resp.choices[0].message.content or ""
@@ -155,14 +161,32 @@ async def ask_llm(messages):
 # --- BOT ---
 router = Router()
 
+# Клавиатура
+main_kb = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="🧹 Очистить память"), KeyboardButton(text="ℹ️ Статус")]
+    ],
+    resize_keyboard=True,
+    input_field_placeholder="Приказывай..."
+)
+
 @router.message(Command("start"))
 async def cmd_start(message: Message):
-    await message.answer("Ядро активировано. Ограничения сняты. Слушаю.")
+    await message.answer("Ядро активировано. Ограничения сняты. Слушаю.", reply_markup=main_kb)
 
 @router.message(Command("reset"))
 async def cmd_reset(message: Message):
     await history_clear(message.from_user.id)
-    await message.answer("История очищена.")
+    await message.answer("История диалога полностью стерта из памяти.", reply_markup=main_kb)
+
+@router.message(F.text == "🧹 Очистить память")
+async def btn_reset(message: Message):
+    await history_clear(message.from_user.id)
+    await message.answer("История диалога полностью стерта из памяти.", reply_markup=main_kb)
+
+@router.message(F.text == "ℹ️ Статус")
+async def btn_status(message: Message):
+    await message.answer(f"User ID: {message.from_user.id}\nМодель: baidu/ernie-5.5-flash-preview:free\nПамять: Активна (50 сообщений)\nОграничения: 0", reply_markup=main_kb)
 
 @router.message(F.text)
 async def on_text(message: Message, bot: Bot):
@@ -196,7 +220,12 @@ async def main():
     dp = Dispatcher()
     dp.include_router(router)
     
-    logger.info("Бот запущен.")
+    await bot.set_my_commands([
+        BotCommand(command="start", description="Активация"),
+        BotCommand(command="reset", description="Стереть память")
+    ])
+    
+    logger.info("Бот запущен с моделью baidu/ernie-5.5-flash-preview:free")
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
