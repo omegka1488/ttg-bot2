@@ -52,11 +52,11 @@ load_dotenv(BASE_DIR / ".env")
 # Значения по умолчанию из промта, чтобы бот стартовал сразу.
 # ПОСЛЕ ПЕРЕВЫПУСКА КЛЮЧЕЙ: положите новые в .env и очистите эти две строки.
 DEFAULT_TELEGRAM_TOKEN = "9133329359:AAHSWQpuYtshCpRGRKi26iBvHYv9mW6DnEA"
-DEFAULT_OPENROUTER_KEY = "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"
+DEFAULT_OPENROUTER_KEY = ""
 
 # Секреты: env имеет приоритет над значениями по умолчанию
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or DEFAULT_TELEGRAM_TOKEN
-OPENROUTER_KEY = os.getenv("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") or DEFAULT_OPENROUTER_KEY
+OPENROUTER_KEY = os.getenv("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 ") or DEFAULT_OPENROUTER_KEY
 OPENROUTER_BASE_URL = os.getenv("https://openrouter.ai/api/v1") or "https://openrouter.ai/api/v1"
 
 CONFIG_PATH = Path(os.getenv("CONFIG_PATH", BASE_DIR / "config.yaml"))
