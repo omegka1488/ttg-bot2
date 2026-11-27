@@ -25,7 +25,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN") or DEFAULT_TELEGRAM_TOKEN
 
 # Основной и запасной ключи
 OPENROUTER_KEY = os.getenv("OPENROUTER_API_KEY") or ""
-OPENROUTER_KEY_2 = os.getenv("OPENROUTER_API_KEY_2") or ""   # <-- добавь второй ключ в .env
+OPENROUTER_API_KEY_2 = os.getenv("OPENROUTER_API_KEY_2") or ""   # <-- добавь второй ключ в .env
 
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 DB_PATH = BASE_DIR / "bot.db"
