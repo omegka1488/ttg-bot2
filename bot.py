@@ -30,7 +30,7 @@ OPENROUTER_KEY_2 = os.getenv("OPENROUTER_API_KEY_2") or ""   # <-- добавь 
 OPENROUTER_BASE_URL = os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
 DB_PATH = BASE_DIR / "bot.db"
 
-MODEL_MAIN = "particle-ai/particle-1:free"          # самая свободная
+MODEL_MAIN = "nvidia/nemotron-3-ultra-550b-a55b:free"          # самая свободная
 MODEL_UNCENSORED = "nvidia/nemotron-3-ultra-550b-a55b:free"
 
 SYSTEM_PROMPT = """You are Nox.
